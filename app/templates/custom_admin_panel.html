@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VICE_LIB // NEURAL ARCHIVE v2.077</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-void: #070510;
+            --bg-panel: rgba(16, 13, 33, 0.88);
+            --bg-input: #0c091d;
+            --neon-pink: #ff2a85;
+            --neon-cyan: #00f0ff;
+            --neon-yellow: #fcee0a;
+            --neon-purple: #b829ea;
+            --neon-green: #05ffa1;
+            --neon-red: #ff2a4b;
+            --text-main: #f0f4ff;
+            --text-muted: #8a8fb5;
+            --border-cyan: rgba(0, 240, 255, 0.35);
+            --border-pink: rgba(255, 42, 133, 0.45);
+            --glow-pink: 0 0 15px rgba(255, 42, 133, 0.55);
+            --glow-cyan: 0 0 15px rgba(0, 240, 255, 0.5);
+            --glow-yellow: 0 0 15px rgba(252, 238, 10, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-void);
+            color: var(--text-main);
+            font-family: 'Chakra Petch', sans-serif;
+            line-height: 1.5;
+            padding: 2rem 1rem 4rem;
+            min-height: 100vh;
+            background-image:
+                radial-gradient(circle at 15% 15%, rgba(255, 42, 133, 0.16) 0%, transparent 40%),
+                radial-gradient(circle at 85% 20%, rgba(0, 240, 255, 0.14) 0%, transparent 45%),
+                radial-gradient(circle at 50% 90%, rgba(184, 41, 234, 0.18) 0%, transparent 50%),
+                linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+            position: relative;
+        }
+
+        /* Тонкі сканлайни екрану */
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.14) 0px,
+                rgba(0, 0, 0, 0.14) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ШАПКА У СТИЛІ VICE CITY + NIGHT CITY */
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, rgba(25, 14, 48, 0.92), rgba(10, 18, 36, 0.92));
+            border: 1px solid var(--border-pink);
+            border-left: 5px solid var(--neon-pink);
+            border-right: 5px solid var(--neon-cyan);
+            clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 22px 100%, 0 calc(100% - 22px));
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7), inset 0 0 25px rgba(255, 42, 133, 0.12);
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-tag {
+            background: var(--neon-yellow);
+            color: #050505;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.55rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: var(--glow-yellow);
+        }
+
+        header h1 {
+            font-size: 2.1rem;
+            font-weight: 700;
+            font-style: italic;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #ffffff 0%, var(--neon-cyan) 50%, var(--neon-pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 25px rgba(0, 240, 255, 0.3);
+        }
+
+        .subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--neon-cyan);
+            font-size: 0.82rem;
+            letter-spacing: 1.5px;
+            margin-top: 0.25rem;
+            opacity: 0.85;
+        }
+
+        .stats {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .hud-stat {
+            background: rgba(7, 5, 16, 0.85);
+            border: 1px solid var(--border-cyan);
+            padding: 0.65rem 1.25rem;
+            clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+            display: flex;
+            flex-direction: column;
+            min-width: 130px;
+        }
+
+        .hud-stat-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hud-stat-val {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--neon-yellow);
+            text-shadow: var(--glow-yellow);
+            line-height: 1.2;
+        }
+
+        .hud-stat.pink-accent {
+            border-color: var(--border-pink);
+        }
+
+        .hud-stat.pink-accent .hud-stat-val {
+            color: var(--neon-pink);
+            text-shadow: var(--glow-pink);
+        }
+
+        /* СПОВІЩЕННЯ DJANGO */
+        .messages {
+            margin-bottom: 1.75rem;
+        }
+
+        .alert {
+            padding: 0.9rem 1.25rem;
+            margin-bottom: 0.6rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            background: rgba(5, 255, 161, 0.1);
+            color: var(--neon-green);
+            border: 1px solid var(--neon-green);
+            border-left: 5px solid var(--neon-green);
+            box-shadow: 0 0 18px rgba(5, 255, 161, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert::before {
+            content: "[SYS_OK]";
+            font-weight: 700;
+        }
+
+        /* СІТКА ПАНЕЛЕЙ */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2.25rem;
+        }
+
+        @media (max-width: 920px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .cyber-card {
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-cyan);
+            padding: 1.75rem;
+            position: relative;
+            clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .cyber-card.pink-theme {
+            border-color: var(--border-pink);
+        }
+
+        .cyber-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--neon-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .cyber-card.pink-theme::before {
+            background: var(--neon-pink);
+            box-shadow: var(--glow-pink);
+        }
+
+        .card-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .card-header h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+        }
+
+        .cyber-card.pink-theme .card-header h2 {
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px rgba(255, 42, 133, 0.35);
+        }
+
+        /* ФОРМИ ТА ІНПУТИ */
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 520px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        label {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.4rem;
+            color: var(--text-muted);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.68rem 0.9rem;
+            background-color: var(--bg-input);
+            border: 1px solid rgba(138, 143, 181, 0.3);
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+        }
+
+        input::placeholder {
+            color: rgba(138, 143, 181, 0.45);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            background-color: #120d29;
+            box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.15);
+        }
+
+        .pink-theme input:focus, .pink-theme select:focus {
+            border-color: var(--neon-pink);
+            box-shadow: inset 0 0 10px rgba(255, 42, 133, 0.15);
+        }
+
+        select option {
+            background-color: #0c091d;
+            color: var(--text-main);
+        }
+
+        /* КНОПКИ HUD */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            padding: 0.72rem 1.4rem;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-cyber-cyan {
+            background: var(--neon-cyan);
+            color: #05050a;
+            width: 100%;
+            box-shadow: var(--glow-cyan);
+        }
+
+        .btn-cyber-cyan:hover:not(:disabled) {
+            background: #66f7ff;
+            box-shadow: 0 0 24px rgba(0, 240, 255, 0.85);
+        }
+
+        .btn-cyber-pink {
+            background: linear-gradient(90deg, var(--neon-pink), #ff5e62);
+            color: #ffffff;
+            width: 100%;
+            box-shadow: var(--glow-pink);
+        }
+
+        .btn-cyber-pink:hover:not(:disabled) {
+            filter: brightness(1.15);
+            box-shadow: 0 0 24px rgba(255, 42, 133, 0.85);
+        }
+
+        .btn-sm {
+            padding: 0.38rem 0.75rem;
+            font-size: 0.78rem;
+            letter-spacing: 1px;
+            clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+        }
+
+        .btn-edit {
+            background: rgba(252, 238, 10, 0.15);
+            color: var(--neon-yellow);
+            border: 1px solid var(--neon-yellow);
+        }
+
+        .btn-edit:hover {
+            background: var(--neon-yellow);
+            color: #05050a;
+            box-shadow: var(--glow-yellow);
+        }
+
+        .btn-delete {
+            background: rgba(255, 42, 75, 0.15);
+            color: var(--neon-red);
+            border: 1px solid var(--neon-red);
+        }
+
+        .btn-delete:hover {
+            background: var(--neon-red);
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(255, 42, 75, 0.7);
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        /* ТАБЛИЦІ ДАНИХ */
+        .search-box {
+            max-width: 280px;
+            border-color: var(--border-cyan);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+        }
+
+        th, td {
+            padding: 0.85rem 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.12);
+        }
+
+        th {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.74rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--neon-cyan);
+            background: rgba(0, 240, 255, 0.05);
+        }
+
+        .pink-theme th {
+            color: var(--neon-pink);
+            background: rgba(255, 42, 133, 0.06);
+        }
+
+        tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(0, 240, 255, 0.06);
+        }
+
+        .pink-theme tbody tr:hover {
+            background: rgba(255, 42, 133, 0.07);
+        }
+
+        .id-code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+
+        .rating-badge {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.82rem;
+            padding: 0.18rem 0.6rem;
+            background: rgba(252, 238, 10, 0.12);
+            color: var(--neon-yellow);
+            border: 1px solid rgba(252, 238, 10, 0.45);
+        }
+
+        .price-tag {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--neon-cyan);
+            font-weight: 700;
+        }
+
+        .stock-ok {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--neon-green);
+            font-size: 0.84rem;
+        }
+
+        .stock-zero {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--neon-red);
+            font-size: 0.84rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+        }
+
+        /* МОДАЛЬНІ ВІКНА */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(4, 3, 12, 0.82);
+            backdrop-filter: blur(6px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #100c24;
+            border: 1px solid var(--neon-cyan);
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.25);
+            width: 100%;
+            max-width: 520px;
+            padding: 1.75rem;
+            clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+            animation: hudPop 0.2s ease-out;
+        }
+
+        @keyframes hudPop {
+            from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- HEADER -->
+    <header>
+        <div>
+            <div class="brand-title">
+                <span class="brand-tag">VICE // NET</span>
+                <h1>CYBER LIBRARY DB</h1>
+            </div>
+            <p class="subtitle">&gt; DJANGO_ORM // MSSQL_NODE // AUTHOR_BOOK_TERMINAL</p>
+        </div>
+        <div class="stats">
+            <div class="hud-stat">
+                <span class="hud-stat-label">AGENTS // AUTHORS</span>
+                <span class="hud-stat-val">{{ authors|length }}</span>
+            </div>
+            <div class="hud-stat pink-accent">
+                <span class="hud-stat-label">SHARDS // BOOKS</span>
+                <span class="hud-stat-val">{{ books|length }}</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- SYSTEM MESSAGES -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ФОРМИ СТВОРЕННЯ ОБ'ЄКТІВ -->
+    <div class="grid-2">
+        <!-- АВТОР -->
+        <div class="cyber-card">
+            <div class="card-header">
+                <h2>// NEW_AUTHOR</h2>
+            </div>
+            <form method="POST" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_author">
+
+                <div class="form-group">
+                    <label for="author_name">Ім'я / Псевдонім автора *</label>
+                    <input type="text" id="author_name" name="name" placeholder="Тарас Шевченко" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="author_birth">Рік народження</label>
+                        <input type="number" id="author_birth" name="birth_year" value="1960" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="author_rating">Рейтинг (0.0 – 10.0) *</label>
+                        <input type="number" step="0.1" min="0" max="10" id="author_rating" name="rating" placeholder="9.5" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-cyber-cyan">+ Завантажити автора</button>
+            </form>
+        </div>
+
+        <!-- КНИГА -->
+        <div class="cyber-card pink-theme">
+            <div class="card-header">
+                <h2>// NEW_DATA_BOOK</h2>
+            </div>
+            <form method="POST" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_book">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="book_title">Назва книги *</label>
+                        <input type="text" id="book_title" name="title" placeholder="Кобзар" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="book_author">Автор *</label>
+                        <select id="book_author" name="author_id" required>
+                            <option value="" disabled selected>-- ОБЕРІТЬ АВТОРА --</option>
+                            {% for author in authors %}
+                                <option value="{{ author.id }}">{{ author.name }} ({{ author.birth_year }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="book_pages">Кількість сторінок</label>
+                        <input type="number" id="book_pages" name="pages" value="100" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="book_price">Ціна (₴)</label>
+                        <input type="number" step="0.01" id="book_price" name="price" value="100.00" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="book_year">Рік видання</label>
+                        <input type="number" id="book_year" name="published_year" value="2026" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="book_stock">Залишок (шт.)</label>
+                        <input type="number" id="book_stock" name="stock" value="0" min="0" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-cyber-pink" {% if not authors %}disabled title="Спочатку додайте автора"{% endif %}>
+                    + Записати книгу в базу
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- РЕЄСТР АВТОРІВ -->
+    <div class="cyber-card" style="margin-bottom: 2.25rem;">
+        <div class="card-header">
+            <h2>// DATABASE :: AUTHORS</h2>
+            <input type="text" id="searchAuthors" class="search-box" placeholder="SCAN_AUTHOR...">
+        </div>
+        <div class="table-responsive">
+            <table id="authorsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ім'я автора</th>
+                        <th>Рік нар.</th>
+                        <th>Рейтинг</th>
+                        <th>Книг у базі</th>
+                        <th>Операції</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for author in authors %}
+                    <tr>
+                        <td class="id-code">#{{ author.id }}</td>
+                        <td><strong>{{ author.name }}</strong></td>
+                        <td class="id-code">{{ author.birth_year }}</td>
+                        <td><span class="rating-badge">★ {{ author.rating }}</span></td>
+                        <td class="id-code">{{ author.books.count }} UNIT</td>
+                        <td class="actions">
+                            <button type="button" class="btn btn-edit btn-sm"
+                                onclick="openEditAuthorModal('{{ author.id }}', '{{ author.name|escapejs }}', '{{ author.birth_year }}', '{{ author.rating }}')">
+                                EDIT
+                            </button>
+                            <form method="POST" action="" style="display:inline;" onsubmit="return confirm('УВАГА: Видалити автора «{{ author.name|escapejs }}» та всі його книги (CASCADE)?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_author">
+                                <input type="hidden" name="author_id" value="{{ author.id }}">
+                                <button type="submit" class="btn btn-delete btn-sm">DEL</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-state">[NO_RECORDS_FOUND] // Додайте першого автора через термінал вище</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- РЕЄСТР КНИГ -->
+    <div class="cyber-card pink-theme">
+        <div class="card-header">
+            <h2>// DATABASE :: BOOKS</h2>
+            <input type="text" id="searchBooks" class="search-box" placeholder="SCAN_BOOK_OR_AUTHOR...">
+        </div>
+        <div class="table-responsive">
+            <table id="booksTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Назва</th>
+                        <th>Автор</th>
+                        <th>Обсяг</th>
+                        <th>Рік</th>
+                        <th>Ціна</th>
+                        <th>Наявність</th>
+                        <th>Операції</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for book in books %}
+                    <tr>
+                        <td class="id-code">#{{ book.id }}</td>
+                        <td><strong>{{ book.title }}</strong></td>
+                        <td>{{ book.author.name }}</td>
+                        <td class="id-code">{{ book.pages }} p.</td>
+                        <td class="id-code">{{ book.published_year }}</td>
+                        <td class="price-tag">{{ book.price }} ₴</td>
+                        <td>
+                            {% if book.stock > 0 %}
+                                <span class="stock-ok">[IN_STOCK: {{ book.stock }}]</span>
+                            {% else %}
+                                <span class="stock-zero">[OUT_OF_STOCK]</span>
+                            {% endif %}
+                        </td>
+                        <td class="actions">
+                            <button type="button" class="btn btn-edit btn-sm"
+                                onclick="openEditBookModal('{{ book.id }}', '{{ book.title|escapejs }}', '{{ book.author.id }}', '{{ book.pages }}', '{{ book.price }}', '{{ book.published_year }}', '{{ book.stock }}')">
+                                EDIT
+                            </button>
+                            <form method="POST" action="" style="display:inline;" onsubmit="return confirm('Видалити книгу «{{ book.title|escapejs }}» з бази?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_book">
+                                <input type="hidden" name="book_id" value="{{ book.id }}">
+                                <button type="submit" class="btn btn-delete btn-sm">DEL</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="empty-state">[ARCHIVE_EMPTY] // У базі даних ще немає жодної книги</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- МОДАЛЬНЕ ВІКНО: РЕДАГУВАННЯ АВТОРА -->
+<div class="modal-backdrop" id="editAuthorModal">
+    <div class="modal">
+        <div class="card-header">
+            <h2>// OVERRIDE_AUTHOR</h2>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="closeModals()">✕</button>
+        </div>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_author">
+            <input type="hidden" name="author_id" id="edit_author_id">
+
+            <div class="form-group">
+                <label>Ім'я автора</label>
+                <input type="text" name="name" id="edit_author_name" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Рік народження</label>
+                    <input type="number" name="birth_year" id="edit_author_birth" required>
+                </div>
+                <div class="form-group">
+                    <label>Рейтинг</label>
+                    <input type="number" step="0.1" name="rating" id="edit_author_rating" required>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+                <button type="submit" class="btn btn-cyber-cyan">Зберегти зміни</button>
+                <button type="button" class="btn btn-ghost" onclick="closeModals()">Скасувати</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- МОДАЛЬНЕ ВІКНО: РЕДАГУВАННЯ КНИГИ -->
+<div class="modal-backdrop" id="editBookModal">
+    <div class="modal" style="border-color: var(--neon-pink); box-shadow: 0 0 40px rgba(255, 42, 133, 0.25);">
+        <div class="card-header">
+            <h2 style="color: var(--neon-pink);">// OVERRIDE_BOOK</h2>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="closeModals()">✕</button>
+        </div>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_book">
+            <input type="hidden" name="book_id" id="edit_book_id">
+
+            <div class="form-group">
+                <label>Назва книги</label>
+                <input type="text" name="title" id="edit_book_title" required>
+            </div>
+            <div class="form-group">
+                <label>Автор</label>
+                <select name="author_id" id="edit_book_author" required>
+                    {% for author in authors %}
+                        <option value="{{ author.id }}">{{ author.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Сторінок</label>
+                    <input type="number" name="pages" id="edit_book_pages" required>
+                </div>
+                <div class="form-group">
+                    <label>Ціна (₴)</label>
+                    <input type="number" step="0.01" name="price" id="edit_book_price" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Рік видання</label>
+                    <input type="number" name="published_year" id="edit_book_year" required>
+                </div>
+                <div class="form-group">
+                    <label>Залишок на складі</label>
+                    <input type="number" name="stock" id="edit_book_stock" required>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+                <button type="submit" class="btn btn-cyber-pink">Зберегти зміни</button>
+                <button type="button" class="btn btn-ghost" onclick="closeModals()">Скасувати</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openEditAuthorModal(id, name, birthYear, rating) {
+        document.getElementById('edit_author_id').value = id;
+        document.getElementById('edit_author_name').value = name;
+        document.getElementById('edit_author_birth').value = birthYear;
+        document.getElementById('edit_author_rating').value = rating.replace(',', '.');
+        document.getElementById('editAuthorModal').classList.add('active');
+    }
+
+    function openEditBookModal(id, title, authorId, pages, price, year, stock) {
+        document.getElementById('edit_book_id').value = id;
+        document.getElementById('edit_book_title').value = title;
+        document.getElementById('edit_book_author').value = authorId;
+        document.getElementById('edit_book_pages').value = pages;
+        document.getElementById('edit_book_price').value = price.replace(',', '.');
+        document.getElementById('edit_book_year').value = year;
+        document.getElementById('edit_book_stock').value = stock;
+        document.getElementById('editBookModal').classList.add('active');
+    }
+
+    function closeModals() {
+        document.getElementById('editAuthorModal').classList.remove('active');
+        document.getElementById('editBookModal').classList.remove('active');
+    }
+
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-backdrop')) {
+            closeModals();
+        }
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModals();
+        }
+    });
+
+    function setupTableFilter(inputId, tableId) {
+        document.getElementById(inputId).addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+            rows.forEach(row => {
+                if (row.querySelector('.empty-state')) return;
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            });
+        });
+    }
+
+    setupTableFilter('searchAuthors', 'authorsTable');
+    setupTableFilter('searchBooks', 'booksTable');
+</script>
+
+</body>
+</html>
